@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { BotContext } from '../contexts/BotContext';
 import { useAuth } from '../contexts/AuthContext';
-import Header from './Header';
-import EnhancedBotStatus from './EnhancedBotStatus';
-import EnhancedTradeList from './EnhancedTradeList';
-import EnhancedTradeChart from './EnhancedTradeChart';
-import EnhancedRiskDashboard from './EnhancedRiskDashboard';
-import LiveNotifications from './LiveNotifications';
-import AnimatedTradingStats from './AnimatedTradingStats';
+import Header from '../components/Header';
+import EnhancedBotStatus from '../components/EnhancedBotStatus';
+import EnhancedTradeList from '../components/EnhancedTradeList';
+import EnhancedTradeChart from '../components/EnhancedTradeChart';
+import EnhancedRiskDashboard from '../components/EnhancedRiskDashboard';
+import LiveNotifications from '../components/LiveNotifications';
+import AnimatedTradingStats from '../components/AnimatedTradingStats';
 
-export default function EnhancedDashboard() {
+export default function Dashboard() {
   const { trades, botStatus, notifications, addNotification } = useContext(BotContext);
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
