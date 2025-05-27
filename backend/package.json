@@ -1,0 +1,47 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "This backend service powers the AI Trading Bot which runs 24/7 to execute trades automatically using pre-generated PhD-level AI trading strategies. It connects to MetaTrader 4/5 platforms through the MetaApi service to manage live trading operations securely and efficiently.",
+  "main": "src/index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "seed": "node src/prisma/seed.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "keywords": [
+    "ai",
+    "trading",
+    "bot",
+    "metatrader",
+    "metaapi",
+    "prisma",
+    "mongodb"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.8.2",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "metaapi.cloud-sdk": "^29.0.5",
+    "mongodb": "^6.16.0",
+    "node-telegram-bot-api": "^0.66.0",
+    "nodemailer": "^7.0.3",
+    "prisma": "^6.8.2",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "prisma": {
+    "schema": "src/prisma/schema.prisma"
+  }
+}
