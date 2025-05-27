@@ -6,8 +6,6 @@ const { log } = require('./utils/logger');
 const { startSocketServer, emitTradeUpdate } = require('./websocket/socketServer');
 const { generateTradeSignal } = require('./strategies/aiStrategy');
 const { executeTrade } = require('./controllers/tradeController');
-const { router: authRouter } = require('./routes/auth'); 
-const authRoutes = require('./routes/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,12 +17,57 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Routes
-app.use('/api/auth', authRouter);
-app.use('/auth', authRoutes);
+// Routes - Import the auth routes correctly
+let authRoutes;
+try {
+  authRoutes = require('./routes/auth.js'); // Note: using .js extension
+  app.use('/api/auth', authRoutes);
+  log('✅ Auth routes loaded successfully');
+} catch (err) {
+  log(`⚠️ Could not load auth routes: ${err.message}`, 'warn');
+  log('📝 Creating basic auth endpoint...');
+  
+  // Fallback basic auth endpoint
+  app.post('/api/auth/login', (req, res) => {
+    const { email, password } = req.body;
+    
+    // Demo credentials
+    if (email === 'phdai@abdallamalik.com' && password === '1234567ASD') {
+      res.json({
+        token: 'demo-jwt-token-' + Date.now(),
+        user: {
+          id: 'demo-user-1',
+          email: email,
+          createdAt: new Date()
+        }
+      });
+    } else {
+      res.status(401).json({ error: 'Invalid credentials' });
+    }
+  });
+}
+
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage()
+  });
+});
+
+// API info endpoint
+app.get('/api', (req, res) => {
+  res.json({
+    name: 'AI Trading Bot Backend',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth/login',
+      websocket: 'ws://localhost:3000'
+    }
+  });
 });
 
 // Start WebSocket server
@@ -36,6 +79,7 @@ server.listen(PORT, () => {
   log(`🚀 Backend server listening on port ${PORT}`);
   log(`💊 Health check: http://localhost:${PORT}/health`);
   log(`🔐 Auth API: http://localhost:${PORT}/api/auth/login`);
+  log(`🌐 WebSocket server started`);
   
   // Log configuration status
   if (!config.metaApiToken) {
@@ -44,11 +88,13 @@ server.listen(PORT, () => {
   if (!config.telegramBotToken) {
     log('⚠️ Telegram not configured - notifications will be logged', 'warn');
   }
+  
+  log('🎯 Demo Login: phdai@abdallamalik.com / 1234567ASD');
 });
 
 // Trading loop - runs every 2 minutes (increased interval for demo)
 let tradeCount = 0;
-setInterval(async () => {
+const tradingInterval = setInterval(async () => {
   try {
     tradeCount++;
     log(`📊 Trading cycle #${tradeCount} starting...`);
@@ -99,17 +145,26 @@ setInterval(async () => {
 }, 120 * 1000); // 2 minutes
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+const shutdown = () => {
   log('📴 Shutting down server...');
-  server.close(() => {
-    log('✅ Server closed');
-  });
-});
-
-process.on('SIGINT', () => {
-  log('📴 Received SIGINT, shutting down gracefully');
+  clearInterval(tradingInterval);
   server.close(() => {
     log('✅ Server closed');
     process.exit(0);
   });
+};
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  log(`💥 Uncaught Exception: ${err.message}`, 'error');
+  console.error(err.stack);
+  shutdown();
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  log(`💥 Unhandled Rejection at: ${promise}, reason: ${reason}`, 'error');
+  shutdown();
 });
