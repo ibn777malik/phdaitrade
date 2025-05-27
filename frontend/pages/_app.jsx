@@ -1,16 +1,27 @@
 import '../styles/globals.css';
+import { AuthProvider } from '../contexts/AuthContext';
 import { BotProvider } from '../contexts/BotContext';
+import ProtectedRoute from '../components/ProtectedRoute';
+import { useRouter } from 'next/router';
 
-/**
- * Custom App component to initialize pages
- * Wraps the entire app with BotProvider for state management
- * and imports global Tailwind CSS styles.
- */
+const publicRoutes = ['/login'];
+
 function MyApp({ Component, pageProps }) {
+  const router = useRouter();
+  const isPublicRoute = publicRoutes.includes(router.pathname);
+
   return (
-    <BotProvider>
-      <Component {...pageProps} />
-    </BotProvider>
+    <AuthProvider>
+      {isPublicRoute ? (
+        <Component {...pageProps} />
+      ) : (
+        <ProtectedRoute>
+          <BotProvider>
+            <Component {...pageProps} />
+          </BotProvider>
+        </ProtectedRoute>
+      )}
+    </AuthProvider>
   );
 }
 
